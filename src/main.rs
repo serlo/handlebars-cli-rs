@@ -1,13 +1,13 @@
 extern crate handlebars;
 extern crate argparse;
+extern crate serde_yaml;
 
 use std::process;
 use std::io;
 use std::io::Read;
 use std::fs;
-use serde_json::Value;
+use serde_yaml::Value;
 
-extern crate serde_json;
 
 use handlebars::Handlebars;
 
@@ -36,7 +36,7 @@ fn main() {
         ap.refer(&mut args.input_data).add_option(
             &["-d", "--data"],
             Store,
-            "Path to the data file in json format.",
+            "Path to the data file in yaml format.",
         );
         ap.refer(&mut args.additional_data).add_argument(
             "additional",
@@ -66,7 +66,7 @@ fn main() {
     } else {
         let file = fs::File::open(args.input_data)
             .expect("Could not open data file!");
-        serde_json::from_reader(io::BufReader::new(file))
+        serde_yaml::from_reader(io::BufReader::new(file))
             .expect("Could not parse data file!")
     };
 
@@ -78,10 +78,10 @@ fn main() {
             process::exit(1);
         }
 
-        if let Value::Object(ref mut map) = data {
-            map.insert(pair[0].clone(), Value::from(pair[1].clone()));
+        if let Value::Mapping(ref mut map) = data {
+            map.insert(pair[0].clone().into(), pair[1].clone().into());
         } else {
-            eprintln!("input data must be a JSON object!");
+            eprintln!("input data must be a YAML object!");
             process::exit(1);
         }
     }
