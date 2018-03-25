@@ -61,12 +61,13 @@ fn main() {
     };
 
     let mut data: Value = if args.input_data.is_empty() {
-        eprintln!("Input data must be specified!");
-        process::exit(1);
+        let file = io::BufReader::new(io::stdin());
+        serde_yaml::from_reader(file)
+            .expect("Could not parse data file!")
     } else {
-        let file = fs::File::open(args.input_data)
-            .expect("Could not open data file!");
-        serde_yaml::from_reader(io::BufReader::new(file))
+        let file = io::BufReader::new(fs::File::open(args.input_data)
+            .expect("Could not open data file!"));
+        serde_yaml::from_reader(file)
             .expect("Could not parse data file!")
     };
 
