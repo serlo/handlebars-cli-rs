@@ -7,4 +7,5 @@ authors = ["Valentin Roland <valentin@vroland.de>"]
 argparse = "0.2"
 handlebars = "1.0.0-beta"
 serde = "1.0"
+serde_json = "1.0"
 serde_yaml = "0.7"

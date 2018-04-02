@@ -1,6 +1,7 @@
 extern crate handlebars;
 extern crate argparse;
 extern crate serde_yaml;
+extern crate serde_json;
 
 use std::process;
 use std::io;
@@ -12,6 +13,10 @@ use serde_yaml::Value;
 use handlebars::Handlebars;
 
 use argparse::{ArgumentParser, Store, List};
+
+mod helpers;
+
+use helpers::*;
 
 #[derive(Default, Debug)]
 struct Args {
@@ -46,7 +51,9 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let reg = Handlebars::new();
+    let mut reg = Handlebars::new();
+    reg.register_helper("add", Box::new(AddHelper));
+    reg.register_helper("mult", Box::new(MultHelper));
 
     let template = if args.input_template.is_empty() {
         eprintln!("Input template must be specified!");
