@@ -2,6 +2,8 @@ extern crate handlebars;
 extern crate argparse;
 extern crate serde_yaml;
 extern crate serde_json;
+#[cfg(feature = "mediawiki")]
+extern crate mwparser_utils;
 
 use std::process;
 use std::io;
@@ -54,6 +56,10 @@ fn main() {
     let mut reg = Handlebars::new();
     reg.register_helper("add", Box::new(AddHelper));
     reg.register_helper("mult", Box::new(MultHelper));
+    #[cfg(feature = "mediawiki")]
+    {
+        reg.register_helper("escape_make", Box::new(MakeEscapeHelper));
+    }
 
     let template = if args.input_template.is_empty() {
         eprintln!("Input template must be specified!");

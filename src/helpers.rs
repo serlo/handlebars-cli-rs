@@ -1,7 +1,30 @@
 
-
 use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use serde_json::{Value, Number};
+
+#[cfg(feature = "mediawiki")]
+use mwparser_utils::util::filename_to_make;
+
+#[cfg(feature = "mediawiki")]
+pub struct MakeEscapeHelper;
+
+#[cfg(feature = "mediawiki")]
+impl HelperDef for MakeEscapeHelper {
+     fn call_inner(
+        &self,
+        h: &Helper,
+        _: &Handlebars,
+        _: &mut RenderContext,
+    ) -> Result<Option<Value>, RenderError> {
+        let path = try!(h.param(0,)
+            .and_then(|v| v.value().as_str(),)
+            .ok_or(RenderError::new(
+                "Param 0 with str type is required for make escape helper"
+            ),)
+        );
+        Ok(Some(Value::String(filename_to_make(&path))))
+    }
+}
 
 pub struct AddHelper;
 
