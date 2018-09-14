@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate handlebars;
-extern crate argparse;
+#[macro_use]
+extern crate structopt;
 extern crate serde_yaml;
 extern crate serde_json;
 #[cfg(feature = "mediawiki")]
@@ -10,51 +11,40 @@ use std::process;
 use std::io;
 use std::io::Read;
 use std::fs;
+use std::path::PathBuf;
+
 use serde_yaml::Value;
-
-
 use handlebars::Handlebars;
-
-use argparse::{ArgumentParser, Store, List};
+use structopt::StructOpt;
 
 mod helpers;
 
 use helpers::*;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, StructOpt)]
+#[structopt(name = "handlebars-cli")]
+/// This program uses the template engine handlebars
+/// to render a given template with the input data.
 struct Args {
-    pub input_template: String,
-    pub input_data: String,
+    /// Path to the input template file.
+    #[structopt(short = "i", long = "input", parse(from_os_str))]
+    pub input_template: PathBuf,
+    /// Path to the data file in yaml format.
+    #[structopt(short = "d", long = "data", parse(from_os_str))]
+    pub input_data: Option<PathBuf>,
+    /// Enable strict mode.
+    #[structopt(short = "s", long = "strict")]
+    pub strict_mode: bool,
+    /// additional data as key-value-pairs. (k1 v1 k2 v2 ...)
+    #[structopt(name = "additional")]
     pub additional_data: Vec<String>,
 }
 
 fn main() {
-    let mut args = Args::default();
-    {
-        let mut ap = ArgumentParser::new();
-        ap.set_description(
-            "This program uses the template engine handlebars \
-            to render a given template with the input data."
-        );
-        ap.refer(&mut args.input_template).add_option(
-            &["-i", "--input"],
-            Store,
-            "Path to the input template",
-        );
-        ap.refer(&mut args.input_data).add_option(
-            &["-d", "--data"],
-            Store,
-            "Path to the data file in yaml format.",
-        );
-        ap.refer(&mut args.additional_data).add_argument(
-            "additional",
-            List,
-            "additional data: key value key2 val2",
-        );
-        ap.parse_args_or_exit();
-    }
+    let args = Args::from_args();
 
     let mut reg = Handlebars::new();
+    reg.set_strict_mode(args.strict_mode);
     reg.register_helper("add", Box::new(AddHelper));
     reg.register_helper("mult", Box::new(MultHelper));
     #[cfg(feature = "mediawiki")]
@@ -63,25 +53,22 @@ fn main() {
         reg.register_helper("urlencode", Box::new(UrlEncode));
     }
 
-    let template = if args.input_template.is_empty() {
-        eprintln!("Input template must be specified!");
-        process::exit(1);
-    } else {
+    let template_file = fs::File::open(args.input_template)
+        .expect("Could not open template file!");
+    let template = {
         let mut input = String::new();
-        let file = fs::File::open(args.input_template)
-            .expect("Could not open template file!");
-        io::BufReader::new(file).read_to_string(&mut input)
+        io::BufReader::new(template_file).read_to_string(&mut input)
             .expect("Could not read from template file!");
         input
     };
 
-    let mut data: Value = if args.input_data.is_empty() {
-        let file = io::BufReader::new(io::stdin());
+    let mut data: Value = if let Some(path) = args.input_data {
+        let file = io::BufReader::new(fs::File::open(path)
+            .expect("Could not open data file!"));
         serde_yaml::from_reader(file)
             .expect("Could not parse data file!")
     } else {
-        let file = io::BufReader::new(fs::File::open(args.input_data)
-            .expect("Could not open data file!"));
+        let file = io::BufReader::new(io::stdin());
         serde_yaml::from_reader(file)
             .expect("Could not parse data file!")
     };

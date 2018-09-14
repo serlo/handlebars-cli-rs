@@ -24,7 +24,7 @@ pub fn urlencode(data: &str) -> String {
 }
 
 #[cfg(feature = "mediawiki")]
-handlebars_helper!(UrlEncode: |input: str| filename_to_make(&input));
+handlebars_helper!(UrlEncode: |input: str| urlencode(&input));
 
 handlebars_helper!(AddHelper: |x: f64, y: f64| x + y);
 handlebars_helper!(MultHelper: |x: f64, y: f64| x * y);
