@@ -32,9 +32,9 @@ struct Args {
     /// Path to the data file in yaml format.
     #[structopt(short = "d", long = "data", parse(from_os_str))]
     pub input_data: Option<PathBuf>,
-    /// Enable strict mode.
-    #[structopt(short = "s", long = "strict")]
-    pub strict_mode: bool,
+    /// Disable strict mode.
+    #[structopt(short = "n", long = "no-strict")]
+    pub no_strict: bool,
     /// additional data as key-value-pairs. (k1 v1 k2 v2 ...)
     #[structopt(name = "additional")]
     pub additional_data: Vec<String>,
@@ -44,7 +44,7 @@ fn main() {
     let args = Args::from_args();
 
     let mut reg = Handlebars::new();
-    reg.set_strict_mode(args.strict_mode);
+    reg.set_strict_mode(!args.no_strict);
     reg.register_helper("add", Box::new(AddHelper));
     reg.register_helper("mult", Box::new(MultHelper));
     #[cfg(feature = "mediawiki")]
