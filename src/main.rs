@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate handlebars;
 extern crate argparse;
 extern crate serde_yaml;
@@ -58,7 +59,8 @@ fn main() {
     reg.register_helper("mult", Box::new(MultHelper));
     #[cfg(feature = "mediawiki")]
     {
-        reg.register_helper("escape_make", Box::new(MakeEscapeHelper));
+        reg.register_helper("escape_make", Box::new(EscapeMake));
+        reg.register_helper("urlencode", Box::new(UrlEncode));
     }
 
     let template = if args.input_template.is_empty() {

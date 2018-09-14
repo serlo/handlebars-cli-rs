@@ -1,83 +1,30 @@
 
-use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
-use serde_json::{Value, Number};
+#[cfg(feature = "mediawiki")]
+use mwparser_utils::filename_to_make;
 
 #[cfg(feature = "mediawiki")]
-use mwparser_utils::util::filename_to_make;
+handlebars_helper!(EscapeMake: |path: str| filename_to_make(&path));
+
+/// based on  https://github.com/bt/rust_urlencoding
+#[cfg(feature = "mediawiki")]
+pub fn urlencode(data: &str) -> String {
+    let mut escaped = String::new();
+    for b in data.as_bytes().iter() {
+        match *b as char {
+            // Accepted characters
+            'A'...'Z' | 'a'...'z' | '0'...'9' | '/' | ':' | '-' | '_' | '.' | '~' => {
+                escaped.push(*b as char)
+            }
+
+            // Everything else is percent-encoded
+            b => escaped.push_str(format!("%{:02X}", b as u32).as_str()),
+        };
+    }
+    return escaped;
+}
 
 #[cfg(feature = "mediawiki")]
-pub struct MakeEscapeHelper;
+handlebars_helper!(UrlEncode: |input: str| filename_to_make(&input));
 
-#[cfg(feature = "mediawiki")]
-impl HelperDef for MakeEscapeHelper {
-     fn call_inner(
-        &self,
-        h: &Helper,
-        _: &Handlebars,
-        _: &mut RenderContext,
-    ) -> Result<Option<Value>, RenderError> {
-        let path = try!(h.param(0,)
-            .and_then(|v| v.value().as_str(),)
-            .ok_or(RenderError::new(
-                "Param 0 with str type is required for make escape helper"
-            ),)
-        );
-        Ok(Some(Value::String(filename_to_make(&path))))
-    }
-}
-
-pub struct AddHelper;
-
-impl HelperDef for AddHelper {
-    fn call_inner(
-        &self,
-        h: &Helper,
-        _: &Handlebars,
-        _: &mut RenderContext,
-    ) -> Result<Option<Value>, RenderError> {
-        let p1 = try!(
-            h.param(0,)
-                .and_then(|v| v.value().as_f64(),)
-                .ok_or(RenderError::new(
-                    "Param 0 with f64 type is required for add helper."
-                ),)
-        );
-        let p2 = try!(
-            h.param(1,)
-                .and_then(|v| v.value().as_f64(),)
-                .ok_or(RenderError::new(
-                    "Param 1 with f64 type is required for add helper."
-                ),)
-        );
-
-        Ok(Some(Value::Number(Number::from_f64(p1 + p2).unwrap_or(0.into()))))
-    }
-}
-
-pub struct MultHelper;
-
-impl HelperDef for MultHelper {
-    fn call_inner(
-        &self,
-        h: &Helper,
-        _: &Handlebars,
-        _: &mut RenderContext,
-    ) -> Result<Option<Value>, RenderError> {
-        let p1 = try!(
-            h.param(0,)
-                .and_then(|v| v.value().as_f64(),)
-                .ok_or(RenderError::new(
-                    "Param 0 with f64 type is required for add helper."
-                ),)
-        );
-        let p2 = try!(
-            h.param(1,)
-                .and_then(|v| v.value().as_f64(),)
-                .ok_or(RenderError::new(
-                    "Param 1 with f64 type is required for add helper."
-                ),)
-        );
-
-        Ok(Some(Value::Number(Number::from_f64(p1 * p2).unwrap_or(0.into()))))
-    }
-}
+handlebars_helper!(AddHelper: |x: f64, y: f64| x + y);
+handlebars_helper!(MultHelper: |x: f64, y: f64| x * y);
