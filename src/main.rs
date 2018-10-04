@@ -56,7 +56,8 @@ fn main() {
     }
     #[cfg(feature = "mfnf")]
     {
-        reg.register_helper("is_excluded", Box::new(is_article_excluded));
+        reg.register_helper("chapter_excluded", Box::new(is_article_excluded));
+        reg.register_helper("part_excluded", Box::new(is_part_excluded));
     }
 
     let template_file = fs::File::open(args.input_template)

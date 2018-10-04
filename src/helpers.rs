@@ -2,7 +2,7 @@
 #[cfg(feature = "mediawiki")]
 use mwparser_utils::filename_to_make;
 #[cfg(feature = "mfnf")]
-use mfnf_sitemap::ExcludeMarker;
+use mfnf_sitemap::{ExcludeMarker, Part};
 #[cfg(feature = "mfnf")]
 use serde_json;
 #[cfg(feature = "mfnf")]
@@ -23,7 +23,25 @@ pub fn is_article_excluded(h: &Helper, _: &Handlebars, _: &Context, _rc: &mut Re
         .iter()
         .find(|t| t.name == subtarget && t.parameters.is_empty())
         .is_some();
-    out.write(if excluded {"true"} else {"false"})?;
+    out.write(if excluded {"true"} else {""})?;
+    Ok(())
+}
+
+#[cfg(feature = "mfnf")]
+pub fn is_part_excluded(h: &Helper, _: &Handlebars, _: &Context, _rc: &mut RenderContext, out: &mut Output) -> HelperResult {
+    let part = h.param(0).expect("first argument should be the Part!").value();
+    let subtarget = h.param(1).expect("second argument should be the subtarget!").value();
+    let part: Part = serde_json::from_value(part.clone())
+        .expect("could not deserialize Part!");
+    let subtarget: String = serde_json::from_value(subtarget.clone())
+        .expect("could not deserialize subtarget!");
+    let excluded = part.chapters.iter().all(
+        |chapter| chapter.markers.exclude.subtargets
+            .iter()
+            .find(|t| t.name == subtarget && t.parameters.is_empty())
+            .is_some()
+    );
+    out.write(if excluded {"true"} else {""})?;
     Ok(())
 }
 
