@@ -6,6 +6,8 @@ extern crate serde_yaml;
 extern crate serde_json;
 #[cfg(feature = "mediawiki")]
 extern crate mwparser_utils;
+#[cfg(feature = "mfnf")]
+extern crate mfnf_sitemap;
 
 use std::process;
 use std::io;
@@ -51,6 +53,10 @@ fn main() {
     {
         reg.register_helper("escape_make", Box::new(EscapeMake));
         reg.register_helper("urlencode", Box::new(UrlEncode));
+    }
+    #[cfg(feature = "mfnf")]
+    {
+        reg.register_helper("is_excluded", Box::new(is_article_excluded));
     }
 
     let template_file = fs::File::open(args.input_template)
