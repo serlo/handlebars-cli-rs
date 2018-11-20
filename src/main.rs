@@ -2,21 +2,21 @@
 extern crate handlebars;
 #[macro_use]
 extern crate structopt;
-extern crate serde_yaml;
-extern crate serde_json;
-#[cfg(feature = "mediawiki")]
-extern crate mwparser_utils;
 #[cfg(feature = "mfnf")]
 extern crate mfnf_sitemap;
+#[cfg(feature = "mediawiki")]
+extern crate mwparser_utils;
+extern crate serde_json;
+extern crate serde_yaml;
 
-use std::process;
+use std::fs;
 use std::io;
 use std::io::Read;
-use std::fs;
 use std::path::PathBuf;
+use std::process;
 
-use serde_yaml::Value;
 use handlebars::Handlebars;
+use serde_yaml::Value;
 use structopt::StructOpt;
 
 mod helpers;
@@ -63,28 +63,26 @@ fn main() {
         reg.register_helper("part_excluded", Box::new(is_part_excluded));
     }
 
-    let template_file = fs::File::open(args.input_template)
-        .expect("Could not open template file!");
+    let template_file = fs::File::open(args.input_template).expect("Could not open template file!");
     let template = {
         let mut input = String::new();
-        io::BufReader::new(template_file).read_to_string(&mut input)
+        io::BufReader::new(template_file)
+            .read_to_string(&mut input)
             .expect("Could not read from template file!");
         input
     };
 
     let mut data: Value = if let Some(path) = args.input_data {
-        let file = io::BufReader::new(fs::File::open(path)
-            .expect("Could not open data file!"));
-        serde_yaml::from_reader(file)
-            .expect("Could not parse data file!")
+        let file = io::BufReader::new(fs::File::open(path).expect("Could not open data file!"));
+        serde_yaml::from_reader(file).expect("Could not parse data file!")
     } else {
         let file = io::BufReader::new(io::stdin());
-        serde_yaml::from_reader(file)
-            .expect("Could not parse data file!")
+        serde_yaml::from_reader(file).expect("Could not parse data file!")
     };
 
     for file in args.base_templates {
-        let filename = file.file_name()
+        let filename = file
+            .file_name()
             .expect(&format!("template base file {:?} has no filename!", &file));
         reg.register_template_file(&filename.to_string_lossy(), &file)
             .expect(&format!("could not register template file {:?}!", &file));
@@ -93,8 +91,10 @@ fn main() {
     // add additional data
     for pair in args.additional_data.chunks(2) {
         if pair.len() < 2 {
-            eprintln!("additional data must be supplied with key \
-                       and value as separate arguments");
+            eprintln!(
+                "additional data must be supplied with key \
+                 and value as separate arguments"
+            );
             process::exit(1);
         }
 
@@ -112,4 +112,3 @@ fn main() {
             .expect("template rendering failed!")
     );
 }
-
