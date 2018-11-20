@@ -7,6 +7,9 @@ use mwparser_utils::filename_to_make;
 #[cfg(feature = "mfnf")]
 use serde_json;
 
+use std::fs::File;
+use std::io::Read;
+
 #[cfg(feature = "mediawiki")]
 handlebars_helper!(EscapeMake: |path: str| filename_to_make(&path));
 
@@ -94,3 +97,11 @@ handlebars_helper!(UrlEncode: |input: str| urlencode(&input));
 
 handlebars_helper!(AddHelper: |x: f64, y: f64| x + y);
 handlebars_helper!(MultHelper: |x: f64, y: f64| x * y);
+handlebars_helper!(LiteralInclude: |path: str| {
+    let mut file = File::open(path)
+        .expect(&format!("could not open literal file {:?}!", path));
+    let mut out = String::new();
+    file.read_to_string(&mut out)
+        .expect(&format!("could not read from file {:?}!", path));
+    out
+});

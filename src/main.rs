@@ -52,6 +52,7 @@ fn main() {
     reg.set_strict_mode(!args.no_strict);
     reg.register_helper("add", Box::new(AddHelper));
     reg.register_helper("mult", Box::new(MultHelper));
+    reg.register_helper("literal", Box::new(LiteralInclude));
     #[cfg(feature = "mediawiki")]
     {
         reg.register_helper("escape_make", Box::new(EscapeMake));
