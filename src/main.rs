@@ -37,6 +37,9 @@ struct Args {
     /// Disable strict mode.
     #[structopt(short = "n", long = "no-strict")]
     pub no_strict: bool,
+    /// List of files allowed as base templates.
+    #[structopt(short = "b", long = "base-templates", parse(from_os_str))]
+    pub base_templates: Vec<PathBuf>,
     /// additional data as key-value-pairs. (k1 v1 k2 v2 ...)
     #[structopt(name = "additional")]
     pub additional_data: Vec<String>,
@@ -79,6 +82,13 @@ fn main() {
         serde_yaml::from_reader(file)
             .expect("Could not parse data file!")
     };
+
+    for file in args.base_templates {
+        let filename = file.file_name()
+            .expect(&format!("template base file {:?} has no filename!", &file));
+        reg.register_template_file(&filename.to_string_lossy(), &file)
+            .expect(&format!("could not register template file {:?}!", &file));
+    }
 
     // add additional data
     for pair in args.additional_data.chunks(2) {
