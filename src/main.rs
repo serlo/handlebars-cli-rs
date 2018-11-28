@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate handlebars;
-#[macro_use]
 extern crate structopt;
-#[cfg(feature = "mfnf")]
-extern crate mfnf_sitemap;
 #[cfg(feature = "mediawiki")]
 extern crate mwparser_utils;
 extern crate serde_json;
